@@ -10,7 +10,7 @@ As part of `Deliverable ⓵ Development deployment: JWT Pizza`, start up the app
 | Register new user<br/>(t@jwt.com, pw: test)         | register.tsx       | [POST] /api/auth  | INSERT INTO user (name, email, password)<br/>INSERT INTO userRole (userId, role, objectId)|
 | Login new user<br/>(t@jwt.com, pw: test)            | login.tsx          | [PUT] /api/auth   | SELECT * FROM user WHERE email=?<br/>SELECT * FROM userRole WHERE userId=?|
 | Order pizza                                         | payment.tsx        | [POST] /api/order | INSERT INTO dinerOrder (dinerId, franchiseId, storeId, date)<br/>INSERT INTO orderItem (orderId, menuId, description, price)|
-| Verify pizza                                        | delivery.tsx       | none              | none         |
+| Verify pizza                                        | delivery.tsx       | [POST] /api/order/verify| none         |
 | View profile page                                   | dinerDashboard.tsx | [GET] /api/order  | SELECT id, franchiseId, storeId, date FROM dinerOrder WHERE dinerId=?<br/>SELECT id, menuId, description, price FROM orderItem WHERE orderId=?|
 | View franchise<br/>(as diner)                       |franchiseDashboard.tsx|[GET] /api/franchise/:userId|SELECT objectId FROM userRole WHERE role='franchisee' AND userId=?|
 | Logout                                              | header.tsx         | [DELETE] /api/auth| none         |
