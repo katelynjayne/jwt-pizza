@@ -97,3 +97,22 @@ test('purchase with login', async ({ page }) => {
   // Check balance
   await expect(page.getByText('0.008')).toBeVisible();
 });
+
+test('register user', async ({ page }) => {
+  await page.route('*/**/api/auth', async (route) => {
+    const regReq = { name: 'test user', email: 't@jwt.com', password: 'a' };
+    const regRes = { user: { id: 3, name: 'test user', email: 't@jwt.com', roles: [{ role: 'diner' }] }, token: 'abcdef' };
+    expect(route.request().method()).toBe('POST');
+    expect(route.request().postDataJSON()).toMatchObject(regReq);
+    await route.fulfill({ json: regRes });
+  });
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Register' }).click();
+  await page.getByRole('textbox', { name: 'Full name' }).fill('test user');
+  await page.getByRole('textbox', { name: 'Email address' }).click();
+  await page.getByRole('textbox', { name: 'Email address' }).fill('t@jwt.com');
+  await page.getByRole('textbox', { name: 'Password' }).click();
+  await page.getByRole('textbox', { name: 'Password' }).fill('a');
+  await page.getByRole('button', { name: 'Register' }).click();
+  await expect(page.locator('#navbar-dark')).toContainText('Logout');
+});
