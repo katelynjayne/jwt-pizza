@@ -231,3 +231,46 @@ test('admin dashboard', async ({ page }) => {
   await expect(page.getByRole('heading')).toContainText('Mama Ricci\'s kitchen');
 });
 
+test('create franchise', async ({ page }) => {
+  let call_count = 1;
+  await page.route('*/**/api/auth', async (route) => {
+    const loginReq = { email: 'a@jwt.com', password: 'admin' };
+    const loginRes = { user: { id: 1, name: 'admin', email: 'a@jwt.com', roles: [{ role: 'admin' }] }, token: 'abcdef' };
+    expect(route.request().method()).toBe('PUT');
+    expect(route.request().postDataJSON()).toMatchObject(loginReq);
+    await route.fulfill({ json: loginRes });
+  });
+  await page.route('*/**/api/franchise', async (route) => {
+    const request = route.request();
+    let franRes;
+    if (request.method() == "GET") {
+      if (call_count == 1) {
+        franRes = [{ id: 1, name: "pizzaPocket", admins: [{ id: 3, name: "pizza franchisee", email: "f@jwt.com" }], stores: [{ id: 1, name: "SLC", totalRevenue: 0.056 }]}];
+        call_count += 1;
+      } else {
+        franRes = [{ id: 1, name: "pizzaPocket", admins: [{ id: 3, name: "pizza franchisee", email: "f@jwt.com" }], stores: [{ id: 1, name: "SLC", totalRevenue: 0.056 }]}, { id: 2, name: "new franchise", admins: [ { email: "f@jwt.com", id: 3, name: "pizza franchisee" }], stores: []}];
+      }
+    } else if (request.method() == "POST") {
+      const franReq = { stores: [], id: "", name: "new franchise", admins: [ { email: "f@jwt.com" }]};
+      franRes = { stores: [], id: 2, name: "new franchise", admins: [ { email: "f@jwt.com", id: 3, name: "pizza franchisee" }]}; 
+      expect(request.postDataJSON()).toMatchObject(franReq);
+    }
+    await route.fulfill({ json: franRes });
+    
+  });
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Login' }).click();
+  await page.getByRole('textbox', { name: 'Email address' }).fill('a@jwt.com');
+  await page.getByRole('textbox', { name: 'Password' }).click();
+  await page.getByRole('textbox', { name: 'Password' }).fill('admin');
+  await page.getByRole('button', { name: 'Login' }).click();
+  await page.getByRole('link', { name: 'Admin' }).click();
+  await page.getByRole('button', { name: 'Add Franchise' }).click();
+  await page.getByRole('textbox', { name: 'franchise name' }).click();
+  await page.getByRole('textbox', { name: 'franchise name' }).fill('new franchise');
+  await page.getByRole('textbox', { name: 'franchisee admin email' }).click();
+  await page.getByRole('textbox', { name: 'franchisee admin email' }).fill('f@jwt.com');
+  await page.getByRole('button', { name: 'Create' }).click();
+  await expect(page.getByRole('table')).toContainText('new franchise');
+});
+
